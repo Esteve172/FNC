@@ -1,17 +1,17 @@
-# -*- coding: utf-8 -*-
+# -- coding: utf-8 --
 
-# Subrutinas para la transformacion de una
-# formula a su forma clausal
+# Subrutinas para la transformacion de una 
+# formula a su forma clausal 
 
 def enFNC(A):
-    # Subrutina de Tseitin para encontrar la FNC de
-    # la formula en la pila
-    # Input: A (cadena) de la forma
+    # Subrutina de Tseitin para encontrar/ la FNC de 
+    # la formula en la pila 
+    # Input: A (cadena) de la forma 
     #                   p=-q
     #                   p=(qYr)
     #                   p=(qOr)
     #                   p=(q>r)
-    # Output: B (cadena), equivalente en FNC
+    # Output: B (cadena), equivalente en FNC 
     assert(len(A)==4 or len(A)==7), u"Fórmula incorrecta!"
     B = ''
     p = A[0]
@@ -43,52 +43,91 @@ def enFNC(A):
 
     return B
 
-# Algoritmo de transformacion de Tseitin
-# Input: A (cadena) en notacion inorder
-# Output: B (cadena), Tseitin
+# Algoritmo de transformacion de Tseitin 
+# Input: A (cadena) en notacion inorder 
+# Output: B (cadena), Tseitin 
 def Tseitin(A, letrasProposicionalesA):
-    letrasProposicionalesB = [chr(x) for x in range(256, 1200)]
+    letrasProposicionalesB = [chr(x) for x in range(97, 110)]
+    letrasProposicionales = letrasProposicionalesA + letrasProposicionalesB
+    
     assert(not bool(set(letrasProposicionalesA) & set(letrasProposicionalesB))), u"¡Hay letras proposicionales en común!"
 
-    #  IMPLEMENTAR AQUI ALGORITMO TSEITIN
-    pass
-
-# Subrutina Clausula para obtener lista de literales
-# Input: C (cadena) una clausula
-# Output: L (lista), lista de literales
-# Se asume que cada literal es un solo caracter
-def Clausula(C):
-    L=[]
-    while(len(C)>1):
-        s = C[0]
-        if(s == '-'):
-            L.append(s+C[1])
-            C=C[3:]
-        else:
-            L.append(s)
-            C=C[2:]
-    return L
+    L = [] #Donde guardare las conjunciones
+    pila = [] # Inicializacion pila
+    i = -1 # Inicializacion count nuevas variables 
+    s = A[0] # Inicializacion sımbolo de trabajo
     
-    pass
+    while (len(A) > 0):
+        if s in letrasProposicionales and len(pila)>0 and pila[-1] =='-':
+            i += 1
+            atomo = letrasProposicionalesB[i]
+            pila = pila[:-1]
+            pila.append(atomo)
+            L.append(atomo + '=' + '-' + s)
+            A = A[1:]
+            if len(A) > 0:
+                s = A[0]
+        elif s == ')':
+            w = pila[-1]
+            u = pila[-2]
+            v = pila[-3]
+            pila = pila[:len(pila)-4]
+            i += 1
+            atomo = letrasProposicionalesB[i]
+            L.append(atomo +"="+"(" + v + u + w + ")")
+            s = atomo
+        else:
+            pila.append(s)
+            A = A[1:]
+            if len(A) > 0:
+                s = A[0]
+    B = ""
+    if i < 0:
+        atomo = pila[-1]
+    else:
+        atomo = letrasProposicionalesB[i]
+    for x in L:
+        y = enFNC(x)
+        B += "Y" + y
+
+    B = atomo + B
+
+    return B
+# Subrutina Clausula para obtener lista de literales 
+# Input: C (cadena) una clausula 
+# Output: L (lista), lista de literales 
+# Se asume que cada literal es un solo caracter 
+def Clausula(C):
+    literales =[]
+    while len(C)>0:
+        s = C[0]
+        if s == '-':
+            literales.append(s+C[1])
+            C = C[3:]
+        else:
+            literales.append(s)
+            C = C[2:]
+    return literales
+    #  IMPLEMENTAR AQUI ALGORITMO CLAUSULA
+
 
 # Algoritmo para obtencion de forma clausal
 # Input: A (cadena) en notacion inorder en FNC
 # Output: L (lista), lista de listas de literales
 def formaClausal(A):
-    literales=[]
-    i=0
-    while len(A)>0:
+    L = []
+    i = 0
+    while len(A) > 0:
         if i >= len(A):
-            literales.append(Clausula(A))
+            L.append(Clausula(A))
             A = []
         else:
-            if A[i] == '&':
-                literales.append(Clausula(A[:i]))
-                A = A[i+1]
+            if A[i] == 'Y':
+                L.append(Clausula(A[:i]))
+                A = A [i+1:]
                 i = 0
             else:
                 i += 1
-    
-    return literales
-
-    pass
+    return L
+            
+    #  IMPLEMENTAR AQUI ALGORITMO FORMA CLAUSAL
